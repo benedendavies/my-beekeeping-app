@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="My Beekeeping App">
+<title>My Beekeeping App</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --honey: #FFB703;
+    --honey-light: #FFD460;
+    --honey-pale: #FFF8E7;
+    --comb: #E6A200;
+    --dark: #1A1208;
+    --cream: #FAF3E8;
+    --sage: #7A8C5E;
+    --white: #FFFFFF;
+    --shadow: rgba(26,18,8,0.12);
+    --shadow-deep: rgba(200,140,0,0.25);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --text-dark: #5A4010;
+    --text-mid: #8A7040;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--dark); min-height: 100vh; overflow-x: hidden; }
+  .app-header { background: var(--honey); padding: 20px 20px 0; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 20px var(--shadow-deep); }
+  .header-top { display: flex; align-items: center; gap: 12px; padding-bottom: 16px; }
+  .header-icon { font-size: 28px; }
+  .header-title { font-family: 'Playfair Display', serif; color: var(--white); font-size: 22px; font-weight: 700; }
+  .header-sub { color: var(--white); opacity: 0.8; font-size: 12px; font-weight: 300; margin-top: 1px; }
+  .nav-tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; padding-bottom: 1px; }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .nav-tab { flex-shrink: 0; padding: 10px 12px; border: none; background: transparent; color: rgba(255,255,255,0.6); font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .nav-tab:hover { color: var(--white); }
+  .nav-tab.active { color: var(--white); border-bottom-color: var(--white); }
+  .main { padding: 20px; max-width: 800px; margin: 0 auto; }
+  .section { display: none; animation: fadeIn 0.3s ease; }
+  .section.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .card { background: var(--white); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 12px var(--shadow); border: 1px solid rgba(255,183,3,0.1); }
+  .card-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 600; color: var(--text-dark); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border-radius: var(--radius-sm); border: none; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .btn-primary { background: var(--honey); color: var(--white); }
+  .btn-primary:hover { background: var(--comb); transform: translateY(-1px); }
+  .btn-secondary { background: var(--honey-pale); color: var(--text-dark); }
+  .btn-secondary:hover { background: #f0e0b0; }
+  .btn-danger { background: #fef2f2; color: #dc2626; padding: 6px 10px; font-size: 12px; }
+  .btn-sm { padding: 6px 12px; font-size: 13px; }
+  .form-group { margin-bottom: 14px; }
+  .form-label { display: block; font-size: 13px; font-weight: 500; color: var(--text-mid); margin-bottom: 5px; }
+  .form-control { width: 100%; padding: 10px 14px; border: 1.5px solid #e8d9c0; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--dark); background: var(--cream); transition: border-color 0.2s; outline: none; }
+  .form-control:focus { border-color: var(--honey); background: var(--white); }
+  select.form-control { cursor: pointer; }
+  textarea.form-control { resize: vertical; min-height: 80px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
+  .badge { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+  .badge-urgent { background: #fef2f2; color: #dc2626; }
+  .badge-high { background: #fff7ed; color: #ea580c; }
+  .badge-normal { background: var(--honey-pale); color: var(--comb); }
+  .badge-low { background: #f0fdf4; color: #16a34a; }
+  .badge-done { background: #f0fdf4; color: #16a34a; }
+  .badge-overdue { background: #fef2f2; color: #dc2626; }
+  .badge-hive { background: var(--honey); color: var(--white); }
+  .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+  @media (max-width: 480px) { .dash-grid { grid-template-columns: 1fr; } }
+  .stat-card { background: var(--white); border-radius: var(--radius); padding: 18px; box-shadow: 0 2px 12px var(--shadow); border-left: 4px solid var(--honey); display: flex; flex-direction: column; gap: 4px; }
+  .stat-label { font-size: 12px; font-weight: 500; color: var(--text-mid); text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-value { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700; color: var(--text-dark); line-height: 1; }
+  .stat-sub { font-size: 12px; color: var(--text-mid); opacity: 0.7; }
+  .hive-status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .hive-card { background: linear-gradient(135deg, #FFB703 0%, #E6A200 100%); border-radius: var(--radius); padding: 18px; color: var(--white); position: relative; overflow: hidden; }
+  .hive-card::before { content: '🍯'; position: absolute; right: -5px; top: -5px; font-size: 50px; opacity: 0.15; }
+  .hive-name { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .hive-detail { font-size: 12px; opacity: 0.85; margin-bottom: 3px; display: flex; align-items: center; gap: 5px; }
+  .section-label { font-family: 'Playfair Display', serif; font-size: 15px; font-weight: 600; color: var(--text-dark); margin: 20px 0 10px; display: flex; align-items: center; gap: 6px; }
+  .list-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 0; border-bottom: 1px solid rgba(255,183,3,0.1); }
+  .list-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .list-item:first-child { padding-top: 0; }
+  .list-item-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #e8d9c0; flex-shrink: 0; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; margin-top: 2px; }
+  .list-item-check.checked { background: var(--sage); border-color: var(--sage); }
+  .list-item-check.checked::after { content: '✓'; color: white; font-size: 11px; font-weight: 700; }
+  .list-item-body { flex: 1; min-width: 0; }
+  .list-item-title { font-size: 15px; font-weight: 500; color: var(--dark); margin-bottom: 3px; }
+  .list-item-title.done { text-decoration: line-through; color: #9ca3af; }
+  .list-item-meta { font-size: 12px; color: var(--text-mid); opacity: 0.7; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .list-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .rating-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .rating-btn { padding: 7px 14px; border-radius: 20px; border: 2px solid #e8d9c0; background: var(--cream); font-size: 13px; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+  .rating-btn.selected { background: var(--honey); border-color: var(--honey); color: white; font-weight: 600; }
+  .yes-no-group { display: flex; gap: 8px; }
+  .yes-no-btn { flex: 1; padding: 8px; border-radius: var(--radius-sm); border: 2px solid #e8d9c0; background: var(--cream); font-size: 14px; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; text-align: center; font-weight: 500; }
+  .yes-no-btn.yes.selected { background: #dcfce7; border-color: #16a34a; color: #15803d; }
+  .yes-no-btn.no.selected { background: #fef2f2; border-color: #dc2626; color: #dc2626; }
+  .log-entry { border: 1.5px solid rgba(255,183,3,0.2); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; background: var(--white); cursor: pointer; transition: all 0.2s; }
+  .log-entry:hover { border-color: var(--honey); box-shadow: 0 4px 12px var(--shadow); }
+  .log-entry-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; flex-wrap: wrap; gap: 6px; }
+  .log-entry-date { font-family: 'Playfair Display', serif; font-weight: 600; font-size: 16px; color: var(--text-dark); }
+  .log-entry-meta { font-size: 12px; color: var(--text-mid); opacity: 0.7; margin-top: 2px; }
+  .log-entry-summary { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+  .photo-thumb { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; cursor: pointer; }
+  .photo-upload-btn { width: 100%; aspect-ratio: 1; border: 2px dashed #e8d9c0; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background: var(--cream); color: var(--text-mid); font-size: 11px; gap: 4px; transition: all 0.2s; }
+  .photo-upload-btn:hover { border-color: var(--honey); background: var(--honey-pale); }
+  .photo-upload-btn span { font-size: 24px; }
+  .ai-setup-banner { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: var(--radius); padding: 20px; color: white; margin-bottom: 16px; }
+  .ai-setup-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+  .ai-setup-text { font-size: 13px; opacity: 0.8; line-height: 1.5; margin-bottom: 14px; }
+  .ai-key-input { display: flex; gap: 8px; }
+  .ai-key-input input { flex: 1; padding: 10px 14px; border-radius: var(--radius-sm); border: none; font-family: 'DM Sans', sans-serif; font-size: 13px; background: rgba(255,255,255,0.1); color: white; outline: none; }
+  .ai-key-input input::placeholder { color: rgba(255,255,255,0.4); }
+  .chat-container { display: flex; flex-direction: column; gap: 12px; min-height: 200px; margin-bottom: 16px; }
+  .chat-msg { max-width: 85%; padding: 12px 16px; border-radius: 16px; font-size: 14px; line-height: 1.5; }
+  .chat-msg.user { background: var(--honey); color: var(--white); align-self: flex-end; border-bottom-right-radius: 4px; }
+  .chat-msg.assistant { background: var(--white); color: var(--dark); align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 2px 8px var(--shadow); }
+  .chat-msg.thinking { background: var(--white); color: var(--text-mid); align-self: flex-start; font-style: italic; border-bottom-left-radius: 4px; box-shadow: 0 2px 8px var(--shadow); }
+  .chat-input-row { display: flex; gap: 8px; }
+  .chat-input { flex: 1; padding: 12px 16px; border: 1.5px solid #e8d9c0; border-radius: 24px; font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; background: var(--white); }
+  .chat-input:focus { border-color: var(--honey); }
+  .chat-send { width: 44px; height: 44px; border-radius: 50%; background: var(--honey); border: none; color: white; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; }
+  .chat-send:hover { background: var(--comb); transform: scale(1.05); }
+  .quick-questions { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .quick-q { padding: 6px 12px; background: var(--honey-pale); border: 1px solid rgba(255,183,3,0.3); border-radius: 20px; font-size: 12px; color: var(--text-dark); cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+  .quick-q:hover { background: var(--honey); color: white; }
+  .harvest-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+  .harvest-stat { background: var(--white); border-radius: var(--radius-sm); padding: 14px; text-align: center; box-shadow: 0 2px 8px var(--shadow); }
+  .harvest-stat-val { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: var(--text-dark); }
+  .harvest-stat-label { font-size: 11px; color: var(--text-mid); margin-top: 2px; }
+  .finance-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+  .finance-card { border-radius: var(--radius-sm); padding: 14px; text-align: center; }
+  .finance-card.income { background: #f0fdf4; border: 1px solid #bbf7d0; }
+  .finance-card.expense { background: #fef2f2; border: 1px solid #fecaca; }
+  .finance-card.profit { background: var(--honey-pale); border: 1px solid rgba(255,183,3,0.3); }
+  .finance-val { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; }
+  .finance-card.income .finance-val { color: #16a34a; }
+  .finance-card.expense .finance-val { color: #dc2626; }
+  .finance-card.profit .finance-val { color: var(--text-dark); }
+  .finance-label { font-size: 11px; color: var(--text-mid); margin-top: 2px; }
+  .calendar-month { border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; border: 1px solid rgba(255,183,3,0.15); }
+  .calendar-month-header { background: var(--honey); color: white; padding: 12px 16px; font-family: 'Playfair Display', serif; font-weight: 600; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
+  .calendar-month-header.current { background: #C47A0F; }
+  .calendar-month-body { background: var(--white); padding: 14px 16px; }
+  .calendar-task-item { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(255,183,3,0.08); font-size: 13px; }
+  .calendar-task-item:last-child { border-bottom: none; }
+  .calendar-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .dot-critical { background: #dc2626; }
+  .dot-important { background: #ea580c; }
+  .dot-routine { background: var(--honey); }
+  .dot-optional { background: var(--sage); }
+  .note-entry { border: 1.5px solid rgba(255,183,3,0.15); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; background: var(--white); }
+  .note-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+  .note-author { font-weight: 600; font-size: 13px; color: var(--text-dark); }
+  .note-date { font-size: 11px; color: var(--text-mid); }
+  .note-body { font-size: 14px; line-height: 1.5; color: var(--dark); }
+  .note-hive-tag { display: inline-flex; padding: 2px 8px; background: var(--honey-pale); border-radius: 10px; font-size: 11px; color: var(--text-mid); margin-top: 6px; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(26,18,8,0.5); z-index: 200; display: none; align-items: flex-end; justify-content: center; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--white); border-radius: var(--radius) var(--radius) 0 0; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; padding: 24px; animation: slideUp 0.3s ease; }
+  @media (min-width: 640px) { .modal { border-radius: var(--radius); margin: auto; } }
+  @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--text-dark); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+  .modal-close { background: var(--honey-pale); border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text-mid); opacity: 0.6; }
+  .empty-state-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state-text { font-size: 15px; }
+  .divider { border: none; border-top: 1px solid rgba(255,183,3,0.12); margin: 16px 0; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--honey); color: var(--white); padding: 12px 20px; border-radius: 30px; font-size: 14px; font-weight: 500; z-index: 300; transition: transform 0.3s ease; white-space: nowrap; box-shadow: 0 8px 24px rgba(200,140,0,0.35); }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .add-btn-row { display: flex; justify-content: flex-end; margin-bottom: 16px; }
+  .tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; background: var(--honey-pale); color: var(--text-mid); border-radius: 10px; font-size: 11px; }
+  .detail-section { margin-bottom: 16px; }
+  .detail-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-mid); margin-bottom: 4px; }
+  .detail-value { font-size: 14px; color: var(--dark); }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .progress-bar { height: 6px; background: #e8d9c0; border-radius: 3px; overflow: hidden; margin-top: 6px; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+  .water-good { background: linear-gradient(90deg, #16a34a, #4ade80); }
+  .water-warn { background: linear-gradient(90deg, #ea580c, #fb923c); }
+  .water-bad { background: linear-gradient(90deg, #dc2626, #f87171); }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-top">
+    <span class="header-icon">🐝</span>
+    <div>
+      <div class="header-title">My Beekeeping App</div>
+      <div class="header-sub">Essex Honey Co. · 2 Hives</div>
+    </div>
+  </div>
+  <nav class="nav-tabs">
+    <button class="nav-tab active" onclick="showSection('dashboard',this)">📊 Dashboard</button>
+    <button class="nav-tab" onclick="showSection('inventory',this)">🛒 Shopping</button>
+    <button class="nav-tab" onclick="showSection('calendar',this)">📅 Calendar</button>
+    <button class="nav-tab" onclick="showSection('tasks',this)">✅ Tasks</button>
+    <button class="nav-tab" onclick="showSection('inspections',this)">🔍 Inspections</button>
+    <button class="nav-tab" onclick="showSection('harvest',this)">🍯 Harvest</button>
+    <button class="nav-tab" onclick="showSection('finance',this)">💰 Finance</button>
+    <button class="nav-tab" onclick="showSection('notes',this)">👥 Notes</button>
+    <button class="nav-tab" onclick="showSection('assistant',this)">🐝 Bee Help</button>
+  </nav>
+</header>
+
+<main class="main">
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="section active">
+  <div class="dash-grid">
+    <div class="stat-card"><div class="stat-label">Items to Buy</div><div class="stat-value" id="dash-shopping">–</div><div class="stat-sub">outstanding</div></div>
+    <div class="stat-card" style="border-left-color:var(--sage)"><div class="stat-label">Tasks Due Soon</div><div class="stat-value" id="dash-tasks">–</div><div class="stat-sub">next 7 days</div></div>
+    <div class="stat-card" style="border-left-color:#8A7040"><div class="stat-label">Inspections</div><div class="stat-value" id="dash-inspections">–</div><div class="stat-sub">total logged</div></div>
+    <div class="stat-card" style="border-left-color:var(--honey-light)"><div class="stat-label">Total Harvest</div><div class="stat-value" id="dash-harvest">–</div><div class="stat-sub">kg this year</div></div>
+  </div>
+  <div class="section-label">🏠 Hive Status</div>
+  <div class="hive-status-grid">
+    <div class="hive-card"><div class="hive-name">Hive 1</div><div class="hive-detail">🗓 <span id="h1-last">No inspections yet</span></div><div class="hive-detail">👑 <span id="h1-queen">–</span></div><div class="hive-detail">💪 <span id="h1-strength">–</span></div></div>
+    <div class="hive-card"><div class="hive-name">Hive 2</div><div class="hive-detail">🗓 <span id="h2-last">No inspections yet</span></div><div class="hive-detail">👑 <span id="h2-queen">–</span></div><div class="hive-detail">💪 <span id="h2-strength">–</span></div></div>
+  </div>
+  <div class="section-label">⚠️ Urgent Items</div>
+  <div class="card" id="dash-urgent-list"></div>
+  <div class="section-label">📅 Upcoming Tasks</div>
+  <div class="card" id="dash-task-list"></div>
+  <div class="section-label">👥 Latest Notes</div>
+  <div class="card" id="dash-notes-list"></div>
+</div>
+
+<!-- SHOPPING & INVENTORY -->
+<div id="inventory" class="section">
+  <div class="add-btn-row"><button class="btn btn-primary" onclick="openModal('add-item-modal')">+ Add Item</button></div>
+  <div class="card"><div class="card-title">🛒 Shopping List <span id="shop-count" style="font-size:13px;font-weight:400;color:var(--text-mid);margin-left:auto"></span></div><div id="shopping-list"></div></div>
+  <div class="card"><div class="card-title">📦 In Stock <span id="stock-count" style="font-size:13px;font-weight:400;color:var(--text-mid);margin-left:auto"></span></div><div id="stock-list"></div></div>
+</div>
+
+<!-- TASKS -->
+<div id="tasks" class="section">
+  <div class="add-btn-row"><button class="btn btn-primary" onclick="openModal('add-task-modal')">+ Add Task</button></div>
+  <div class="card"><div class="card-title">📋 All Tasks</div><div id="task-list"></div></div>
+</div>
+
+<!-- INSPECTIONS -->
+<div id="inspections" class="section">
+  <div class="add-btn-row"><button class="btn btn-primary" onclick="openModal('add-inspection-modal')">+ New Inspection</button></div>
+  <div class="card"><div class="card-title">🔍 Inspection Log</div><div id="inspection-list"></div></div>
+</div>
+
+<!-- HARVEST LOG -->
+<div id="harvest" class="section">
+  <div class="add-btn-row"><button class="btn btn-primary" onclick="openModal('add-harvest-modal')">+ Log Harvest</button></div>
+  <div class="harvest-summary">
+    <div class="harvest-stat"><div class="harvest-stat-val" id="h-total-kg">0</div><div class="harvest-stat-label">Total kg</div></div>
+    <div class="harvest-stat"><div class="harvest-stat-val" id="h-total-jars">0</div><div class="harvest-stat-label">Total jars</div></div>
+    <div class="harvest-stat"><div class="harvest-stat-val" id="h-harvests">0</div><div class="harvest-stat-label">Harvests</div></div>
+  </div>
+  <div class="card"><div class="card-title">🍯 Harvest Records</div><div id="harvest-list"></div></div>
+</div>
+
+<!-- FINANCIAL TRACKER -->
+<div id="finance" class="section">
+  <div class="add-btn-row"><button class="btn btn-primary" onclick="openModal('add-finance-modal')">+ Add Entry</button></div>
+  <div class="finance-summary">
+    <div class="finance-card income"><div class="finance-val" id="f-income">£0</div><div class="finance-label">Income</div></div>
+    <div class="finance-card expense"><div class="finance-val" id="f-expense">£0</div><div class="finance-label">Expenses</div></div>
+    <div class="finance-card profit"><div class="finance-val" id="f-profit">£0</div><div class="finance-label">Profit</div></div>
+  </div>
+  <div class="card"><div class="card-title">💰 All Transactions</div><div id="finance-list"></div></div>
+</div>
+
+<!-- SEASONAL CALENDAR -->
+<div id="calendar" class="section">
+  <div class="card" style="background:linear-gradient(135deg,#FFB703,#E6A200);color:white;border:none;margin-bottom:16px">
+    <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:600;margin-bottom:6px">📅 Essex Beekeeping Calendar</div>
+    <div style="font-size:13px;opacity:0.9">Seasonal tasks tailored for Essex, UK. 🔴 Critical &nbsp; 🟠 Important &nbsp; 🟡 Routine &nbsp; 🟢 Optional</div>
+  </div>
+  <div id="calendar-content"></div>
+</div>
+
+<!-- NOTES -->
+<div id="notes" class="section">
+  <div class="add-btn-row"><button class="btn btn-primary" onclick="openModal('add-note-modal')">+ Add Note</button></div>
+  <div class="card"><div class="card-title">👥 Team Notes</div><div style="font-size:13px;color:var(--text-mid);margin-bottom:16px;margin-top:-8px">Leave notes for each other between inspections</div><div id="notes-list"></div></div>
+</div>
+
+<!-- AI ADVISOR -->
+<div id="assistant" class="section">
+  <div id="ai-setup-section"></div>
+  <div id="ai-chat-section" style="display:none">
+    <div class="card">
+      <div class="card-title">🤖 AI Beekeeping Advisor</div>
+      <div style="font-size:13px;color:var(--text-mid);margin-bottom:12px;margin-top:-8px">Ask anything about beekeeping, equipment, inspections, or your hives</div>
+      <div style="font-size:12px;color:var(--text-mid);margin-bottom:8px;font-weight:500">Quick questions:</div>
+      <div class="quick-questions">
+        <button class="quick-q" onclick="sendQuickQ(this)">What should I do in the hive this month?</button>
+        <button class="quick-q" onclick="sendQuickQ(this)">My bees seem aggressive — why?</button>
+        <button class="quick-q" onclick="sendQuickQ(this)">I spotted patchy brood — what does it mean?</button>
+        <button class="quick-q" onclick="sendQuickQ(this)">When should I treat for Varroa?</button>
+        <button class="quick-q" onclick="sendQuickQ(this)">How do I know if my queen is failing?</button>
+        <button class="quick-q" onclick="sendQuickQ(this)">Is my honey ready to harvest?</button>
+      </div>
+      <div class="chat-container" id="chat-container"></div>
+      <div class="chat-input-row">
+        <input class="chat-input" id="chat-input" placeholder="Ask anything about beekeeping..." onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="chat-send" onclick="sendChat()">➤</button>
+      </div>
+    </div>
+    <div class="card" style="margin-top:0">
+      <div style="font-size:12px;color:var(--text-mid);display:flex;justify-content:space-between;align-items:center">
+        <span>🔑 API Key configured</span>
+        <button class="btn btn-danger btn-sm" onclick="clearApiKey()">Change Key</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- MODALS -->
+
+<!-- ADD ITEM -->
+<div id="add-item-modal" class="modal-overlay" onclick="closeModalOnOverlay(event,'add-item-modal')">
+  <div class="modal">
+    <div class="modal-title">Add Item <button class="modal-close" onclick="closeModal('add-item-modal')">✕</button></div>
+    <div class="form-group"><label class="form-label">Item Name *</label><input id="item-name" class="form-control" placeholder="e.g. Smoker"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Category</label><select id="item-category" class="form-control"><option>Hive Equipment</option><option>PPE</option><option>Tools</option><option>Feeding &amp; Health</option><option>Harvesting</option><option>Treatments</option><option>Other</option></select></div>
+      <div class="form-group"><label class="form-label">Priority</label><select id="item-priority" class="form-control"><option value="urgent">🔴 Urgent</option><option value="high">🟠 High</option><option value="normal" selected>🟡 Normal</option><option value="low">🟢 Low</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Quantity</label><input id="item-qty" class="form-control" type="number" min="1" value="1"></div>
+      <div class="form-group"><label class="form-label">Status</label><select id="item-status" class="form-control"><option value="needed">Need to Buy</option><option value="instock">In Stock</option></select></div>
+    </div>
+    <div class="form-group"><label class="form-label">Notes</label><input id="item-notes" class="form-control" placeholder="e.g. Buy from Thornes"></div>
+    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('add-item-modal')">Cancel</button><button class="btn btn-primary" onclick="addItem()">Add Item</button></div>
+  </div>
+</div>
+
+<!-- ADD TASK -->
+<div id="add-task-modal" class="modal-overlay" onclick="closeModalOnOverlay(event,'add-task-modal')">
+  <div class="modal">
+    <div class="modal-title">Add Task <button class="modal-close" onclick="closeModal('add-task-modal')">✕</button></div>
+    <div class="form-group"><label class="form-label">Task *</label><input id="task-title" class="form-control" placeholder="e.g. Weekly hive inspection"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Due Date</label><input id="task-date" class="form-control" type="date"></div>
+      <div class="form-group"><label class="form-label">Priority</label><select id="task-priority" class="form-control"><option value="urgent">🔴 Urgent</option><option value="high">🟠 High</option><option value="normal" selected>🟡 Normal</option><option value="low">🟢 Low</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Hive</label><select id="task-hive" class="form-control"><option value="Both">Both Hives</option><option value="Hive 1">Hive 1</option><option value="Hive 2">Hive 2</option><option value="General">General</option></select></div>
+      <div class="form-group"><label class="form-label">Category</label><select id="task-category" class="form-control"><option>Inspection</option><option>Feeding</option><option>Treatment</option><option>Harvesting</option><option>Equipment</option><option>Admin</option><option>Other</option></select></div>
+    </div>
+    <div class="form-group"><label class="form-label">Notes</label><textarea id="task-notes" class="form-control"></textarea></div>
+    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('add-task-modal')">Cancel</button><button class="btn btn-primary" onclick="addTask()">Add Task</button></div>
+  </div>
+</div>
+
+<!-- ADD INSPECTION -->
+<div id="add-inspection-modal" class="modal-overlay" onclick="closeModalOnOverlay(event,'add-inspection-modal')">
+  <div class="modal">
+    <div class="modal-title">New Inspection <button class="modal-close" onclick="closeModal('add-inspection-modal')">✕</button></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Date *</label><input id="insp-date" class="form-control" type="date"></div>
+      <div class="form-group"><label class="form-label">Hive *</label><select id="insp-hive" class="form-control"><option>Hive 1</option><option>Hive 2</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Weather</label><input id="insp-weather" class="form-control" placeholder="e.g. Sunny, 18°C"></div>
+      <div class="form-group"><label class="form-label">Inspector</label><input id="insp-inspector" class="form-control" placeholder="Your name"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Temperament</label><div class="rating-group" id="temperament-group"><button class="rating-btn" onclick="selectRating('temperament','Calm')">😊 Calm</button><button class="rating-btn" onclick="selectRating('temperament','Defensive')">😤 Defensive</button><button class="rating-btn" onclick="selectRating('temperament','Aggressive')">😡 Aggressive</button></div></div>
+    <div class="form-group"><label class="form-label">Colony Strength</label><div class="rating-group" id="strength-group"><button class="rating-btn" onclick="selectRating('strength','Light')">🔵 Light</button><button class="rating-btn" onclick="selectRating('strength','Medium')">🟡 Medium</button><button class="rating-btn" onclick="selectRating('strength','Strong')">🟢 Strong</button></div></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Queen Seen?</label><div class="yes-no-group"><button class="yes-no-btn yes" onclick="selectYesNo('queen','Yes')">✓ Yes</button><button class="yes-no-btn no" onclick="selectYesNo('queen','No')">✕ No</button></div></div>
+      <div class="form-group"><label class="form-label">Eggs Visible?</label><div class="yes-no-group"><button class="yes-no-btn yes" onclick="selectYesNo('eggs','Yes')">✓ Yes</button><button class="yes-no-btn no" onclick="selectYesNo('eggs','No')">✕ No</button></div></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Queen Cells?</label><div class="yes-no-group"><button class="yes-no-btn yes" onclick="selectYesNo('qcells','Yes')">✓ Yes</button><button class="yes-no-btn no" onclick="selectYesNo('qcells','No')">✕ No</button></div></div>
+      <div class="form-group"><label class="form-label">Signs of Disease?</label><div class="yes-no-group"><button class="yes-no-btn yes" onclick="selectYesNo('disease','Yes')">✓ Yes</button><button class="yes-no-btn no" onclick="selectYesNo('disease','No')">✕ No</button></div></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Frames of Brood</label><input id="insp-brood" class="form-control" type="number" min="0" max="15" placeholder="e.g. 6"></div>
+      <div class="form-group"><label class="form-label">Varroa Drop (24hr)</label><input id="insp-varroa" class="form-control" type="number" min="0" placeholder="e.g. 3"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Brood Pattern</label><div class="rating-group" id="brood-group"><button class="rating-btn" onclick="selectRating('brood','Solid')">⬛ Solid</button><button class="rating-btn" onclick="selectRating('brood','Good')">✅ Good</button><button class="rating-btn" onclick="selectRating('brood','Patchy')">🔶 Patchy</button></div></div>
+    <div class="form-group"><label class="form-label">Super Status</label><div class="rating-group" id="super-group"><button class="rating-btn" onclick="selectRating('super','None on')">– None</button><button class="rating-btn" onclick="selectRating('super','Being drawn')">📐 Drawing</button><button class="rating-btn" onclick="selectRating('super','Filling nicely')">🍯 Filling</button><button class="rating-btn" onclick="selectRating('super','Nearly full')">⚠️ Nearly full</button></div></div>
+    <div class="form-group">
+      <label class="form-label">📸 Photos (saved on this device)</label>
+      <div class="photo-grid" id="insp-photo-grid">
+        <label class="photo-upload-btn"><span>+</span>Add photo<input type="file" accept="image/*" style="display:none" onchange="addInspectionPhoto(event)"></label>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Actions Taken</label><textarea id="insp-actions" class="form-control" placeholder="e.g. Added second super..."></textarea></div>
+    <div class="form-group"><label class="form-label">Next Visit Actions</label><textarea id="insp-next" class="form-control" placeholder="e.g. Check for queen cells in 7 days..."></textarea></div>
+    <div class="form-group"><label class="form-label">General Notes</label><textarea id="insp-notes" class="form-control" placeholder="Anything else you noticed..."></textarea></div>
+    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('add-inspection-modal')">Cancel</button><button class="btn btn-primary" onclick="addInspection()">Save Inspection</button></div>
+  </div>
+</div>
+
+<!-- VIEW INSPECTION -->
+<div id="view-inspection-modal" class="modal-overlay" onclick="closeModalOnOverlay(event,'view-inspection-modal')">
+  <div class="modal">
+    <div class="modal-title" id="view-insp-title">Inspection <button class="modal-close" onclick="closeModal('view-inspection-modal')">✕</button></div>
+    <div id="view-insp-content"></div>
+    <div class="modal-actions"><button class="btn btn-danger" id="view-insp-delete">🗑 Delete</button><button class="btn btn-secondary" onclick="closeModal('view-inspection-modal')">Close</button></div>
+  </div>
+</div>
+
+<!-- ADD HARVEST -->
+<div id="add-harvest-modal" class="modal-overlay" onclick="closeModalOnOverlay(event,'add-harvest-modal')">
+  <div class="modal">
+    <div class="modal-title">Log Harvest <button class="modal-close" onclick="closeModal('add-harvest-modal')">✕</button></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Date *</label><input id="harv-date" class="form-control" type="date"></div>
+      <div class="form-group"><label class="form-label">Hive</label><select id="harv-hive" class="form-control"><option>Hive 1</option><option>Hive 2</option><option>Both</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Weight (kg) *</label><input id="harv-weight" class="form-control" type="number" step="0.1" placeholder="e.g. 4.5"></div>
+      <div class="form-group"><label class="form-label">Water Content (%)</label><input id="harv-water" class="form-control" type="number" step="0.1" placeholder="Must be below 20%"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Jars filled (227g)</label><input id="harv-jars" class="form-control" type="number" placeholder="e.g. 18"></div>
+      <div class="form-group"><label class="form-label">Honey Type</label><select id="harv-type" class="form-control"><option>Mixed Floral</option><option>Oilseed Rape</option><option>Clover</option><option>Lime</option><option>Heather</option><option>Other</option></select></div>
+    </div>
+    <div class="form-group"><label class="form-label">Notes</label><textarea id="harv-notes" class="form-control" placeholder="e.g. Light golden colour, excellent flavour..."></textarea></div>
+    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('add-harvest-modal')">Cancel</button><button class="btn btn-primary" onclick="addHarvest()">Save Harvest</button></div>
+  </div>
+</div>
+
+<!-- ADD FINANCE -->
+<div id="add-finance-modal" class="modal-overlay" onclick="closeModalOnOverlay(event,'add-finance-modal')">
+  <div class="modal">
+    <div class="modal-title">Add Transaction <button class="modal-close" onclick="closeModal('add-finance-modal')">✕</button></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Date *</label><input id="fin-date" class="form-control" type="date"></div>
+      <div class="form-group"><label class="form-label">Type</label><select id="fin-type" class="form-control"><option value="income">💚 Income</option><option value="expense">🔴 Expense</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Amount (£) *</label><input id="fin-amount" class="form-control" type="number" step="0.01" placeholder="e.g. 24.00"></div>
+      <div class="form-group"><label class="form-label">Category</label><select id="fin-category" class="form-control"><option>Honey Sales</option><option>Equipment</option><option>Treatments</option><option>Bees/Nucs</option><option>Jars &amp; Packaging</option><option>Memberships</option><option>Other</option></select></div>
+    </div>
+    <div class="form-group"><label class="form-label">Description *</label><input id="fin-desc" class="form-control" placeholder="e.g. Sold 6 jars at Chelmsford market"></div>
+    <div class="form-group"><label class="form-label">Hive</label><select id="fin-hive" class="form-control"><option>General</option><option>Hive 1</option><option>Hive 2</option><option>Both</option></select></div>
+    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('add-finance-modal')">Cancel</button><button class="btn btn-primary" onclick="addFinance()">Save</button></div>
+  </div>
+</div>
+
+<!-- ADD NOTE -->
+<div id="add-note-modal" class="modal-overlay" onclick="closeModalOnOverlay(event,'add-note-modal')">
+  <div class="modal">
+    <div class="modal-title">Add Note <button class="modal-close" onclick="closeModal('add-note-modal')">✕</button></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Your Name *</label><input id="note-author" class="form-control" placeholder="e.g. Ben"></div>
+      <div class="form-group"><label class="form-label">Hive</label><select id="note-hive" class="form-control"><option>General</option><option>Hive 1</option><option>Hive 2</option><option>Both</option></select></div>
+    </div>
+    <div class="form-group"><label class="form-label">Note *</label><textarea id="note-body" class="form-control" rows="4" placeholder="e.g. Noticed bees bringing in lots of yellow pollen this morning..."></textarea></div>
+    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('add-note-modal')">Cancel</button><button class="btn btn-primary" onclick="addNote()">Save Note</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let state={items:[],tasks:[],inspections:[],harvests:[],finances:[],notes:[]};
+let ratings={},yesNos={},inspPhotos=[];
+let chatHistory=[];
+
+function save(){try{localStorage.setItem('beekeeping_v2',JSON.stringify(state));}catch(e){}}
+function load(){
+  try{const d=localStorage.getItem('beekeeping_v2');if(d)state=JSON.parse(d);}catch(e){}
+  if(!state.items)state.items=[];
+  if(!state.tasks)state.tasks=[];
+  if(!state.inspections)state.inspections=[];
+  if(!state.harvests)state.harvests=[];
+  if(!state.finances)state.finances=[];
+  if(!state.notes)state.notes=[];
+  if(state.items.length===0)seedItems();
+  if(state.tasks.length===0)seedTasks();
+}
+
+function seedItems(){
+  state.items=[
+    {id:uid(),name:'2 x adult bee suits',category:'PPE',priority:'urgent',qty:2,status:'needed',notes:"Full suits with integral veils. Don't buy cheap — veil quality is critical. £50–£90 each."},
+    {id:uid(),name:'Varroa mesh floor',category:'Hive Equipment',priority:'high',qty:1,status:'needed',notes:'Check if already included with gifted hive'},
+    {id:uid(),name:'Brood frames (brood & a half setup)',category:'Hive Equipment',priority:'high',qty:13,status:'needed',notes:'BS National frames. Brood & a half confirmed.'},
+    {id:uid(),name:'Super frames x20',category:'Hive Equipment',priority:'normal',qty:20,status:'needed',notes:'Buy new only — never reuse secondhand'},
+    {id:uid(),name:'3 x supers',category:'Hive Equipment',priority:'normal',qty:3,status:'needed',notes:'Check compatibility with National hive'},
+    {id:uid(),name:'Smoker',category:'Tools',priority:'high',qty:1,status:'needed',notes:'Decent-sized stainless steel. Budget £20–£35.'},
+    {id:uid(),name:'Smoker fuel',category:'Tools',priority:'low',qty:1,status:'needed',notes:'Wood pellets, cardboard or dried hessian'},
+    {id:uid(),name:'1 x child bee suit',category:'PPE',priority:'normal',qty:1,status:'needed',notes:'Measure child carefully before ordering'},
+    {id:uid(),name:'Frame pins (gimp pins 15mm)',category:'Tools',priority:'normal',qty:1,status:'needed',notes:'Small bag goes a long way'},
+    {id:uid(),name:'Metal brood box & super box rails',category:'Hive Equipment',priority:'normal',qty:1,status:'needed',notes:'Ensure correct size for BS National frames'},
+    {id:uid(),name:'Bee feeder (rapid feeder)',category:'Feeding & Health',priority:'normal',qty:1,status:'needed',notes:'For sugar syrup. Budget £10–£20.'},
+    {id:uid(),name:'Queen excluder',category:'Hive Equipment',priority:'normal',qty:1,status:'needed',notes:'Metal QE with wood border preferred'},
+    {id:uid(),name:'White granulated sugar',category:'Feeding & Health',priority:'normal',qty:1,status:'needed',notes:'For syrup — never use brown sugar'},
+    {id:uid(),name:'Specialist beekeeping fondant',category:'Feeding & Health',priority:'low',qty:1,status:'needed',notes:'Winter feeding. NOT cake icing fondant.'},
+    {id:uid(),name:'Apiguard or MAQS (summer Varroa treatment)',category:'Treatments',priority:'high',qty:1,status:'needed',notes:'Apply post-harvest July–September'},
+    {id:uid(),name:'Oxalic acid / Api-Bioxal (winter Varroa treatment)',category:'Treatments',priority:'high',qty:1,status:'needed',notes:'Apply broodless period Nov–Jan'},
+    {id:uid(),name:'Uncapping knife or fork',category:'Harvesting',priority:'low',qty:1,status:'needed',notes:'For removing wax cappings before extraction'},
+    {id:uid(),name:'Honey extractor',category:'Harvesting',priority:'low',qty:1,status:'needed',notes:'Try borrowing from EBKA first year'},
+    {id:uid(),name:'Double sieve',category:'Harvesting',priority:'low',qty:1,status:'needed',notes:'Removes wax and debris after extraction'},
+    {id:uid(),name:'Settling tank (food grade)',category:'Harvesting',priority:'low',qty:1,status:'needed',notes:'15kg is fine to start'},
+    {id:uid(),name:'Refractometer',category:'Harvesting',priority:'normal',qty:1,status:'needed',notes:'Checks water content — must be below 20%. ~£15–£20'},
+    {id:uid(),name:'Hive inspection notebook',category:'Other',priority:'normal',qty:1,status:'needed',notes:'Required by law to record all treatments'},
+    {id:uid(),name:'Queen marker pens (5 colours)',category:'Tools',priority:'low',qty:1,status:'needed',notes:'Non-essential Year 1. Water-based acrylic.'},
+    {id:uid(),name:'Queen catcher / clip',category:'Tools',priority:'low',qty:1,status:'needed',notes:'Non-essential Year 1'},
+    {id:uid(),name:'Carry box or caddy',category:'Other',priority:'low',qty:1,status:'needed',notes:'For transporting kit to hives'},
+    {id:uid(),name:'Small lidded containers',category:'Other',priority:'low',qty:3,status:'needed',notes:'For collecting propolis and wax scrapings'},
+    {id:uid(),name:'National hive (brood & a half, 2 supers)',category:'Hive Equipment',priority:'normal',qty:1,status:'instock',notes:''},
+    {id:uid(),name:'Brood box & super foundation (box)',category:'Hive Equipment',priority:'normal',qty:1,status:'instock',notes:''},
+    {id:uid(),name:'Large honey bucket',category:'Harvesting',priority:'normal',qty:1,status:'instock',notes:''},
+    {id:uid(),name:'Small harvesting/storage buckets',category:'Harvesting',priority:'normal',qty:1,status:'instock',notes:''},
+    {id:uid(),name:'Gloves (2 pairs)',category:'PPE',priority:'normal',qty:2,status:'instock',notes:''},
+    {id:uid(),name:'Wellington boots (2 pairs)',category:'PPE',priority:'normal',qty:2,status:'instock',notes:''},
+    {id:uid(),name:'Hive tools x2 (J-type)',category:'Tools',priority:'normal',qty:2,status:'instock',notes:''},
+    {id:uid(),name:'Bee brush',category:'Tools',priority:'normal',qty:1,status:'instock',notes:''},
+    {id:uid(),name:'Blow torch',category:'Tools',priority:'normal',qty:1,status:'instock',notes:'For sterilising woodware and lighting smoker'},
+    {id:uid(),name:'Washing soda crystals',category:'Other',priority:'normal',qty:1,status:'instock',notes:'For sterilising hive woodware'},
+  ];
+  save();
+}
+
+function seedTasks(){
+  const addDays=n=>{const d=new Date();d.setDate(d.getDate()+n);return d.toISOString().split('T')[0];};
+  state.tasks=[
+    {id:uid(),title:'Bleach and sterilise the hive',date:addDays(3),priority:'urgent',hive:'Both',category:'Equipment',notes:'1L soda crystals + 65ml bleach. Scrub, rinse, dry fully.',done:false},
+    {id:uid(),title:'Register on BeeBase',date:addDays(5),priority:'high',hive:'General',category:'Admin',notes:'Free — takes 10 minutes at nationalbeeunit.com',done:false},
+    {id:uid(),title:'Join BBKA & Essex Beekeepers Association',date:addDays(7),priority:'high',hive:'General',category:'Admin',notes:'BBKA membership includes public liability insurance',done:false},
+    {id:uid(),title:'Register food business with Essex Council',date:addDays(14),priority:'high',hive:'General',category:'Admin',notes:'Free and legally required before selling any honey',done:false},
+    {id:uid(),title:'Order nucleus colonies (nucs)',date:addDays(21),priority:'high',hive:'Both',category:'Other',notes:'Order from reputable Essex breeder. Aim for May collection.',done:false},
+    {id:uid(),title:'Complete Level 2 Food Hygiene certificate',date:addDays(30),priority:'normal',hive:'General',category:'Admin',notes:'Free or low cost online',done:false},
+    {id:uid(),title:'Assemble all frames and fit foundation',date:addDays(14),priority:'high',hive:'Both',category:'Equipment',notes:'Brood frames and super frames. Use frame pins.',done:false},
+    {id:uid(),title:'Source local beekeeping mentor via EBKA',date:addDays(10),priority:'high',hive:'General',category:'Admin',notes:'Invaluable for first season.',done:false},
+  ];
+  save();
+}
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).substr(2,5);}
+function fmtDate(str){if(!str)return'–';const d=new Date(str+'T00:00:00');return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}
+function fmtMoney(n){return'£'+Math.abs(n).toFixed(2);}
+function isOverdue(str){if(!str)return false;return new Date(str+'T00:00:00')<new Date(new Date().toDateString());}
+function isDueSoon(str){if(!str)return false;const d=new Date(str+'T00:00:00'),now=new Date(new Date().toDateString()),diff=(d-now)/86400000;return diff>=0&&diff<=7;}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+function emptyState(icon,text){return`<div class="empty-state"><div class="empty-state-icon">${icon}</div><div class="empty-state-text">${text}</div></div>`;}
+
+function showSection(id,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(btn)btn.classList.add('active');
+  renderAll();
+}
+
+function openModal(id){
+  if(id==='add-inspection-modal'){
+    document.getElementById('insp-date').value=new Date().toISOString().split('T')[0];
+    ratings={};yesNos={};inspPhotos=[];
+    document.querySelectorAll('.rating-btn').forEach(b=>b.classList.remove('selected'));
+    document.querySelectorAll('.yes-no-btn').forEach(b=>b.classList.remove('selected'));
+    ['insp-weather','insp-inspector','insp-brood','insp-varroa','insp-actions','insp-next','insp-notes'].forEach(f=>{const el=document.getElementById(f);if(el)el.value='';});
+    document.getElementById('insp-photo-grid').innerHTML=`<label class="photo-upload-btn"><span>+</span>Add photo<input type="file" accept="image/*" style="display:none" onchange="addInspectionPhoto(event)"></label>`;
+  }
+  if(id==='add-harvest-modal')document.getElementById('harv-date').value=new Date().toISOString().split('T')[0];
+  if(id==='add-finance-modal')document.getElementById('fin-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function closeModalOnOverlay(e,id){if(e.target===e.currentTarget)closeModal(id);}
+
+function selectRating(group,val){
+  ratings[group]=val;
+  document.querySelectorAll(`#${group}-group .rating-btn`).forEach(b=>{b.classList.toggle('selected',b.getAttribute('onclick').includes(`'${val}'`));});
+}
+function selectYesNo(field,val){
+  yesNos[field]=val;
+  document.querySelectorAll(`[onclick="selectYesNo('${field}','Yes')"],[onclick="selectYesNo('${field}','No')"]`).forEach(b=>{b.classList.remove('selected');if(b.getAttribute('onclick').includes(`'${val}'`))b.classList.add('selected');});
+}
+
+function addInspectionPhoto(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    inspPhotos.push(e.target.result);
+    const grid=document.getElementById('insp-photo-grid');
+    const img=document.createElement('img');
+    img.src=e.target.result;img.className='photo-thumb';
+    grid.insertBefore(img,grid.lastElementChild);
+  };
+  reader.readAsDataURL(file);
+}
+
+function addItem(){
+  const name=document.getElementById('item-name').value.trim();
+  if(!name){showToast('⚠️ Please enter an item name');return;}
+  state.items.push({id:uid(),name,category:document.getElementById('item-category').value,priority:document.getElementById('item-priority').value,qty:parseInt(document.getElementById('item-qty').value)||1,status:document.getElementById('item-status').value,notes:document.getElementById('item-notes').value.trim()});
+  save();closeModal('add-item-modal');
+  document.getElementById('item-name').value='';document.getElementById('item-notes').value='';
+  renderInventory();renderDashboard();showToast('✅ Item added');
+}
+function markItemBought(id){const i=state.items.find(x=>x.id===id);if(i){i.status=i.status==='needed'?'instock':'needed';save();renderInventory();renderDashboard();}}
+function deleteItem(id){state.items=state.items.filter(i=>i.id!==id);save();renderInventory();renderDashboard();showToast('🗑 Removed');}
+
+function renderInventory(){
+  const needed=state.items.filter(i=>i.status==='needed');
+  const instock=state.items.filter(i=>i.status==='instock');
+  const po={urgent:0,high:1,normal:2,low:3};
+  needed.sort((a,b)=>po[a.priority]-po[b.priority]);
+  document.getElementById('shop-count').textContent=`${needed.length} items`;
+  document.getElementById('stock-count').textContent=`${instock.length} items`;
+  document.getElementById('shopping-list').innerHTML=needed.length?needed.map(i=>`<div class="list-item"><div class="list-item-check" onclick="markItemBought('${i.id}')"></div><div class="list-item-body"><div class="list-item-title">${i.name}</div><div class="list-item-meta"><span class="badge badge-${i.priority}">${i.priority}</span><span class="tag">${i.category}</span>${i.qty>1?`<span>Qty: ${i.qty}</span>`:''} ${i.notes?`<span>· ${i.notes}</span>`:''}</div></div><div class="list-item-actions"><button class="btn btn-danger" onclick="deleteItem('${i.id}')">✕</button></div></div>`).join(''):emptyState('🛒','Shopping list is empty!');
+  document.getElementById('stock-list').innerHTML=instock.length?instock.map(i=>`<div class="list-item"><div class="list-item-check checked" onclick="markItemBought('${i.id}')"></div><div class="list-item-body"><div class="list-item-title done">${i.name}</div><div class="list-item-meta"><span class="tag">${i.category}</span>${i.qty>1?`<span>Qty: ${i.qty}</span>`:''}</div></div><div class="list-item-actions"><button class="btn btn-danger" onclick="deleteItem('${i.id}')">✕</button></div></div>`).join(''):emptyState('📦','No items in stock yet');
+}
+
+function addTask(){
+  const title=document.getElementById('task-title').value.trim();
+  if(!title){showToast('⚠️ Please enter a task');return;}
+  state.tasks.push({id:uid(),title,date:document.getElementById('task-date').value,priority:document.getElementById('task-priority').value,hive:document.getElementById('task-hive').value,category:document.getElementById('task-category').value,notes:document.getElementById('task-notes').value.trim(),done:false});
+  save();closeModal('add-task-modal');
+  document.getElementById('task-title').value='';document.getElementById('task-notes').value='';
+  renderTasks();renderDashboard();showToast('✅ Task added');
+}
+function toggleTask(id){const t=state.tasks.find(x=>x.id===id);if(t){t.done=!t.done;save();renderTasks();renderDashboard();}}
+function deleteTask(id){state.tasks=state.tasks.filter(t=>t.id!==id);save();renderTasks();renderDashboard();showToast('🗑 Removed');}
+
+function renderTasks(){
+  const sorted=[...state.tasks].sort((a,b)=>{if(a.done!==b.done)return a.done?1:-1;if(a.date&&b.date)return new Date(a.date)-new Date(b.date);return 0;});
+  document.getElementById('task-list').innerHTML=sorted.length?sorted.map(t=>`<div class="list-item"><div class="list-item-check ${t.done?'checked':''}" onclick="toggleTask('${t.id}')"></div><div class="list-item-body"><div class="list-item-title ${t.done?'done':''}">${t.title}</div><div class="list-item-meta">${!t.done?`<span class="badge badge-${isOverdue(t.date)?'overdue':t.priority}">${isOverdue(t.date)?'⚠️ Overdue':t.priority}</span>`:'<span class="badge badge-done">✓ Done</span>'}${t.date?`<span>📅 ${fmtDate(t.date)}</span>`:''}<span class="tag">🏠 ${t.hive}</span><span class="tag">${t.category}</span>${t.notes?`<span>· ${t.notes}</span>`:''}</div></div><div class="list-item-actions"><button class="btn btn-danger" onclick="deleteTask('${t.id}')">✕</button></div></div>`).join(''):emptyState('🎉','No tasks yet');
+}
+
+function addInspection(){
+  const date=document.getElementById('insp-date').value;
+  if(!date){showToast('⚠️ Please select a date');return;}
+  state.inspections.push({id:uid(),date,hive:document.getElementById('insp-hive').value,weather:document.getElementById('insp-weather').value.trim(),inspector:document.getElementById('insp-inspector').value.trim(),temperament:ratings['temperament']||'–',strength:ratings['strength']||'–',queenSeen:yesNos['queen']||'–',eggsVisible:yesNos['eggs']||'–',queenCells:yesNos['qcells']||'–',disease:yesNos['disease']||'–',broodFrames:document.getElementById('insp-brood').value||'–',varroaDrop:document.getElementById('insp-varroa').value||'–',broodPattern:ratings['brood']||'–',superStatus:ratings['super']||'–',actionsTaken:document.getElementById('insp-actions').value.trim(),nextActions:document.getElementById('insp-next').value.trim(),notes:document.getElementById('insp-notes').value.trim(),photos:inspPhotos.slice()});
+  save();closeModal('add-inspection-modal');renderInspections();renderDashboard();showToast('✅ Inspection saved');
+}
+
+function viewInspection(id){
+  const i=state.inspections.find(x=>x.id===id);if(!i)return;
+  document.getElementById('view-insp-title').innerHTML=`${i.hive} — ${fmtDate(i.date)} <button class="modal-close" onclick="closeModal('view-inspection-modal')">✕</button>`;
+  const photos=i.photos&&i.photos.length?`<div class="detail-section"><div class="detail-label">Photos</div><div class="photo-grid">${i.photos.map(p=>`<img src="${p}" class="photo-thumb">`).join('')}</div></div>`:'';
+  document.getElementById('view-insp-content').innerHTML=`<div class="detail-grid"><div class="detail-section"><div class="detail-label">Date</div><div class="detail-value">${fmtDate(i.date)}</div></div><div class="detail-section"><div class="detail-label">Inspector</div><div class="detail-value">${i.inspector||'–'}</div></div><div class="detail-section"><div class="detail-label">Weather</div><div class="detail-value">${i.weather||'–'}</div></div><div class="detail-section"><div class="detail-label">Temperament</div><div class="detail-value">${i.temperament}</div></div><div class="detail-section"><div class="detail-label">Strength</div><div class="detail-value">${i.strength}</div></div><div class="detail-section"><div class="detail-label">Queen Seen</div><div class="detail-value">${i.queenSeen}</div></div><div class="detail-section"><div class="detail-label">Eggs Visible</div><div class="detail-value">${i.eggsVisible}</div></div><div class="detail-section"><div class="detail-label">Queen Cells</div><div class="detail-value">${i.queenCells}</div></div><div class="detail-section"><div class="detail-label">Disease Signs</div><div class="detail-value">${i.disease}</div></div><div class="detail-section"><div class="detail-label">Brood Frames</div><div class="detail-value">${i.broodFrames}</div></div><div class="detail-section"><div class="detail-label">Varroa Drop</div><div class="detail-value">${i.varroaDrop}</div></div><div class="detail-section"><div class="detail-label">Brood Pattern</div><div class="detail-value">${i.broodPattern}</div></div></div><hr class="divider">${photos}<div class="detail-section"><div class="detail-label">Super Status</div><div class="detail-value">${i.superStatus}</div></div>${i.actionsTaken?`<div class="detail-section"><div class="detail-label">Actions Taken</div><div class="detail-value">${i.actionsTaken}</div></div>`:''} ${i.nextActions?`<div class="detail-section"><div class="detail-label">Next Visit</div><div class="detail-value">${i.nextActions}</div></div>`:''} ${i.notes?`<div class="detail-section"><div class="detail-label">Notes</div><div class="detail-value">${i.notes}</div></div>`:''}`;
+  document.getElementById('view-insp-delete').onclick=()=>{state.inspections=state.inspections.filter(x=>x.id!==id);save();closeModal('view-inspection-modal');renderInspections();renderDashboard();showToast('🗑 Deleted');};
+  openModal('view-inspection-modal');
+}
+
+function renderInspections(){
+  const sorted=[...state.inspections].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById('inspection-list').innerHTML=sorted.length?sorted.map(i=>`<div class="log-entry" onclick="viewInspection('${i.id}')"><div class="log-entry-header"><div><div class="log-entry-date">${fmtDate(i.date)}</div><div class="log-entry-meta">${i.inspector?`By: ${i.inspector}`:''}</div></div><span class="badge badge-hive">🏠 ${i.hive}</span></div><div class="log-entry-summary">${i.temperament!=='–'?`<span class="tag">😊 ${i.temperament}</span>`:''}${i.strength!=='–'?`<span class="tag">💪 ${i.strength}</span>`:''}${i.queenSeen!=='–'?`<span class="tag">👑 Queen: ${i.queenSeen}</span>`:''}${i.queenCells==='Yes'?`<span class="badge badge-urgent">⚠️ Queen cells!</span>`:''}${i.disease==='Yes'?`<span class="badge badge-urgent">🚨 Disease</span>`:''}${i.broodFrames!=='–'?`<span class="tag">🐣 ${i.broodFrames} frames</span>`:''}</div></div>`).join(''):emptyState('🔍','No inspections logged yet');
+}
+
+function addHarvest(){
+  const date=document.getElementById('harv-date').value;
+  const weight=parseFloat(document.getElementById('harv-weight').value);
+  if(!date||!weight){showToast('⚠️ Please fill in date and weight');return;}
+  state.harvests.push({id:uid(),date,hive:document.getElementById('harv-hive').value,weight,water:parseFloat(document.getElementById('harv-water').value)||0,jars:parseInt(document.getElementById('harv-jars').value)||0,type:document.getElementById('harv-type').value,notes:document.getElementById('harv-notes').value.trim()});
+  save();closeModal('add-harvest-modal');renderHarvest();renderDashboard();showToast('✅ Harvest logged');
+}
+function deleteHarvest(id){state.harvests=state.harvests.filter(h=>h.id!==id);save();renderHarvest();renderDashboard();showToast('🗑 Removed');}
+
+function renderHarvest(){
+  const total=state.harvests.reduce((s,h)=>s+h.weight,0);
+  const totalJars=state.harvests.reduce((s,h)=>s+h.jars,0);
+  document.getElementById('h-total-kg').textContent=total.toFixed(1);
+  document.getElementById('h-total-jars').textContent=totalJars;
+  document.getElementById('h-harvests').textContent=state.harvests.length;
+  const sorted=[...state.harvests].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById('harvest-list').innerHTML=sorted.length?sorted.map(h=>{
+    const wBad=h.water>=21,wWarn=h.water>=20&&h.water<21,wGood=h.water>0&&h.water<20;
+    const wClass=wBad?'water-bad':wWarn?'water-warn':'water-good';
+    return`<div class="list-item"><div class="list-item-body"><div class="list-item-title">🍯 ${h.weight}kg ${h.type} — ${fmtDate(h.date)}</div><div class="list-item-meta"><span class="badge badge-hive">🏠 ${h.hive}</span>${h.jars?`<span class="tag">🫙 ${h.jars} jars</span>`:''}${h.water?`<span class="tag">💧 ${h.water}% ${wBad?'⚠️ TOO HIGH':wWarn?'⚠️ Borderline':'✓ Good'}</span>`:''}${h.notes?`<span>· ${h.notes}</span>`:''}</div>${h.water?`<div class="progress-bar"><div class="progress-fill ${wClass}" style="width:${Math.min((h.water/25)*100,100)}%"></div></div>`:''}</div><div class="list-item-actions"><button class="btn btn-danger" onclick="deleteHarvest('${h.id}')">✕</button></div></div>`;
+  }).join(''):emptyState('🍯','No harvests logged yet');
+}
+
+function addFinance(){
+  const amount=parseFloat(document.getElementById('fin-amount').value);
+  const desc=document.getElementById('fin-desc').value.trim();
+  if(!amount||!desc){showToast('⚠️ Please fill in amount and description');return;}
+  state.finances.push({id:uid(),date:document.getElementById('fin-date').value,type:document.getElementById('fin-type').value,amount,category:document.getElementById('fin-category').value,desc,hive:document.getElementById('fin-hive').value});
+  save();closeModal('add-finance-modal');renderFinance();showToast('✅ Transaction saved');
+}
+function deleteFinance(id){state.finances=state.finances.filter(f=>f.id!==id);save();renderFinance();showToast('🗑 Removed');}
+
+function renderFinance(){
+  const income=state.finances.filter(f=>f.type==='income').reduce((s,f)=>s+f.amount,0);
+  const expense=state.finances.filter(f=>f.type==='expense').reduce((s,f)=>s+f.amount,0);
+  const profit=income-expense;
+  document.getElementById('f-income').textContent=fmtMoney(income);
+  document.getElementById('f-expense').textContent=fmtMoney(expense);
+  document.getElementById('f-profit').textContent=(profit>=0?'':'-')+fmtMoney(profit);
+  const sorted=[...state.finances].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById('finance-list').innerHTML=sorted.length?sorted.map(f=>`<div class="list-item"><div class="list-item-body"><div class="list-item-title">${f.type==='income'?'💚':'🔴'} ${f.desc}</div><div class="list-item-meta"><span style="font-weight:600;color:${f.type==='income'?'#16a34a':'#dc2626'}">${f.type==='income'?'+':'-'}${fmtMoney(f.amount)}</span><span class="tag">${f.category}</span><span class="tag">🏠 ${f.hive}</span><span>${fmtDate(f.date)}</span></div></div><div class="list-item-actions"><button class="btn btn-danger" onclick="deleteFinance('${f.id}')">✕</button></div></div>`).join(''):emptyState('💰','No transactions yet');
+}
+
+const calendarData=[
+  {month:'January',tasks:[{dot:'dot-critical',text:'Monitor hive weight — hefting to check winter stores'},{dot:'dot-critical',text:'Apply oxalic acid treatment if broodless'},{dot:'dot-routine',text:'Check hive entrance is clear of dead bees and debris'},{dot:'dot-optional',text:'Read and plan — attend winter beekeeping lectures'}]},
+  {month:'February',tasks:[{dot:'dot-critical',text:'Continue monitoring stores — feed fondant if light'},{dot:'dot-important',text:'Check for signs of early spring activity on warm days (>10°C)'},{dot:'dot-routine',text:'Clean and sterilise spare equipment'},{dot:'dot-optional',text:'Order nucleus colonies and queens for spring'}]},
+  {month:'March',tasks:[{dot:'dot-critical',text:'First inspection when temperature reaches 14°C+'},{dot:'dot-critical',text:'Check queen is present and laying'},{dot:'dot-important',text:'Begin feeding if stores are low (1:1 sugar syrup)'},{dot:'dot-routine',text:'Replace old brood comb — aim for 1/3 annually'},{dot:'dot-optional',text:'Join Essex Beekeepers spring meetings'}]},
+  {month:'April',tasks:[{dot:'dot-critical',text:'Weekly inspections begin — check for swarm preparations'},{dot:'dot-critical',text:'Add super when 7–8 brood frames covered with bees'},{dot:'dot-important',text:'Monitor closely — OSR nectar flow begins in Essex'},{dot:'dot-routine',text:'Mark your queen if not already done'},{dot:'dot-optional',text:'Register new colonies on BeeBase'}]},
+  {month:'May',tasks:[{dot:'dot-critical',text:'PEAK SWARM SEASON — weekly inspections non-negotiable'},{dot:'dot-critical',text:'Check for queen cells every 7 days'},{dot:'dot-critical',text:'Add supers as needed — strong colonies fill one in 2 weeks'},{dot:'dot-important',text:'Collect nucleus colonies if ordered'},{dot:'dot-routine',text:'Monitor Varroa drop on sticky boards'}]},
+  {month:'June',tasks:[{dot:'dot-critical',text:'Continue weekly inspections and swarm management'},{dot:'dot-important',text:'Extract OSR honey before it granulates in the comb!'},{dot:'dot-important',text:'Replace extracted supers immediately for summer flow'},{dot:'dot-routine',text:'Check water content with refractometer before extracting'}]},
+  {month:'July',tasks:[{dot:'dot-critical',text:'Main summer honey harvest — extract when supers are capped'},{dot:'dot-critical',text:'Begin Varroa monitoring — apply Apiguard or MAQS after harvest'},{dot:'dot-important',text:'Ensure queen has room to lay in brood box'},{dot:'dot-routine',text:'Jar, label and store honey — keep below 20°C'},{dot:'dot-optional',text:'Enter local honey shows for product feedback'}]},
+  {month:'August',tasks:[{dot:'dot-critical',text:'Complete summer Varroa treatment'},{dot:'dot-critical',text:'Begin autumn feeding (2:1 syrup) to build winter stores'},{dot:'dot-important',text:'Final honey extraction of the season'},{dot:'dot-routine',text:'Reduce hive entrances to guard against wasps'},{dot:'dot-optional',text:'Book National Honey Show tickets (late October)'}]},
+  {month:'September',tasks:[{dot:'dot-critical',text:'Ensure each colony has 20kg+ of stores for winter'},{dot:'dot-critical',text:'Continue feeding until stores sufficient — stop by end of month'},{dot:'dot-important',text:'Fit mouse guards before mice seek winter shelter'},{dot:'dot-routine',text:'Remove queen excluder for winter'},{dot:'dot-routine',text:'Final hive inspection before winter shutdown'}]},
+  {month:'October',tasks:[{dot:'dot-critical',text:'Hive should now be closed up for winter'},{dot:'dot-important',text:'Treat with oxalic acid if colony is broodless'},{dot:'dot-routine',text:'Secure hive against autumn storms — check straps and stand'},{dot:'dot-optional',text:'National Honey Show — Sandown Park, Surrey'},{dot:'dot-optional',text:'Begin planning next year expansion'}]},
+  {month:'November',tasks:[{dot:'dot-critical',text:'Oxalic acid trickle/vaporise treatment — broodless period'},{dot:'dot-important',text:'Hefting weekly to monitor winter stores'},{dot:'dot-routine',text:'Clean all extracted equipment, melt wax from cappings'},{dot:'dot-optional',text:'Scottish Beekeepers Association webinars begin'}]},
+  {month:'December',tasks:[{dot:'dot-important',text:'Continue weekly hefting — feed fondant if stores low'},{dot:'dot-routine',text:'Review the year — what worked, what to change'},{dot:'dot-routine',text:'Service smoker and all equipment'},{dot:'dot-optional',text:'Plan hive expansion — order equipment now'},{dot:'dot-optional',text:'BBKA exam registration opens for March sittings'}]},
+];
+
+function renderCalendar(){
+  const cm=new Date().getMonth();
+  document.getElementById('calendar-content').innerHTML=calendarData.map((m,idx)=>`<div class="calendar-month"><div class="calendar-month-header ${idx===cm?'current':''}">${m.month}${idx===cm?' ← Current Month':''}</div><div class="calendar-month-body">${m.tasks.map(t=>`<div class="calendar-task-item"><div class="calendar-dot ${t.dot}"></div><div>${t.text}</div></div>`).join('')}</div></div>`).join('');
+}
+
+function addNote(){
+  const author=document.getElementById('note-author').value.trim();
+  const body=document.getElementById('note-body').value.trim();
+  if(!author||!body){showToast('⚠️ Please fill in your name and note');return;}
+  state.notes.unshift({id:uid(),author,hive:document.getElementById('note-hive').value,body,date:new Date().toISOString()});
+  save();closeModal('add-note-modal');
+  document.getElementById('note-author').value='';document.getElementById('note-body').value='';
+  renderNotes();renderDashboard();showToast('✅ Note added');
+}
+function deleteNote(id){state.notes=state.notes.filter(n=>n.id!==id);save();renderNotes();renderDashboard();showToast('🗑 Removed');}
+
+function renderNotes(){
+  document.getElementById('notes-list').innerHTML=state.notes.length?state.notes.map(n=>`<div class="note-entry"><div class="note-header"><div class="note-author">👤 ${n.author}</div><div style="display:flex;gap:8px;align-items:center"><div class="note-date">${fmtDate(n.date.split('T')[0])}</div><button class="btn btn-danger" onclick="deleteNote('${n.id}')">✕</button></div></div><div class="note-body">${n.body}</div><div class="note-hive-tag">🏠 ${n.hive}</div></div>`).join(''):emptyState('👥','No notes yet — leave a note for your beekeeping partner!');
+}
+
+function renderAssistant(){
+  const key=localStorage.getItem('ai_key');
+  if(!key){
+    document.getElementById('ai-setup-section').innerHTML=`<div class="ai-setup-banner"><div class="ai-setup-title">🤖 AI Beekeeping Advisor</div><div class="ai-setup-text">Get instant intelligent advice powered by Claude AI. Ask anything about your hives, equipment, inspections, or beekeeping technique — tailored to your Essex apiary.</div><div class="ai-key-input"><input id="ai-key-input" type="password" placeholder="Paste your Anthropic API key (sk-ant-...)"><button class="btn btn-primary btn-sm" onclick="saveAiKey()" style="white-space:nowrap;flex-shrink:0">Activate</button></div><p style="font-size:11px;opacity:0.5;margin-top:10px">Get your key at console.anthropic.com → API Keys. ~£5 credit lasts many months of use.</p></div>`;
+    document.getElementById('ai-chat-section').style.display='none';
+  } else {
+    document.getElementById('ai-setup-section').innerHTML='';
+    document.getElementById('ai-chat-section').style.display='block';
+    if(chatHistory.length===0){
+      document.getElementById('chat-container').innerHTML=`<div class="chat-msg assistant">👋 Hello! I'm your AI beekeeping advisor, powered by Claude. I know you're based in Essex with 2 hives and you're in your first season with a National hive in brood and a half setup. Ask me anything — from hive management to equipment advice to what you should be doing this month!</div>`;
+    }
+  }
+}
+
+function saveAiKey(){
+  const key=document.getElementById('ai-key-input').value.trim();
+  if(!key||!key.startsWith('sk-')){showToast('⚠️ Please enter a valid Anthropic API key');return;}
+  localStorage.setItem('ai_key',key);chatHistory=[];renderAssistant();showToast('✅ AI Advisor activated!');
+}
+
+function clearApiKey(){if(confirm('Remove API key?')){localStorage.removeItem('ai_key');chatHistory=[];renderAssistant();}}
+
+function sendQuickQ(btn){document.getElementById('chat-input').value=btn.textContent;sendChat();}
+
+async function sendChat(){
+  const input=document.getElementById('chat-input');
+  const msg=input.value.trim();if(!msg)return;
+  const key=localStorage.getItem('ai_key');if(!key)return;
+  input.value='';
+  const container=document.getElementById('chat-container');
+  container.innerHTML+=`<div class="chat-msg user">${msg}</div>`;
+  container.innerHTML+=`<div class="chat-msg thinking" id="thinking-msg">🐝 Thinking...</div>`;
+  container.scrollTop=container.scrollHeight;
+  chatHistory.push({role:'user',content:msg});
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:`You are an expert beekeeping advisor helping a beginner beekeeper in Essex, UK. Key context: They have 2 hives (National hive with brood and a half setup), are in their first season, based in Essex (temperate UK climate), using British Standard National equipment. They have completed an intro beekeeping course. Give practical, specific advice relevant to UK beekeeping, seasonal timing for Essex, and their beginner level. Be warm, encouraging and concise. Use emojis sparingly. Today's month is ${new Date().toLocaleString('en-GB',{month:'long'})}.`,
+        messages:chatHistory
+      })
+    });
+    const data=await res.json();
+    const reply=data.content&&data.content[0]?data.content[0].text:'Sorry, I could not get a response. Please check your API key.';
+    chatHistory.push({role:'assistant',content:reply});
+    document.getElementById('thinking-msg').remove();
+    container.innerHTML+=`<div class="chat-msg assistant">${reply.replace(/\n/g,'<br>')}</div>`;
+    container.scrollTop=container.scrollHeight;
+  }catch(e){
+    document.getElementById('thinking-msg').remove();
+    container.innerHTML+=`<div class="chat-msg assistant">⚠️ Error connecting to AI. Please check your API key is valid and you have credit at console.anthropic.com.</div>`;
+  }
+}
+
+function renderDashboard(){
+  const needed=state.items.filter(i=>i.status==='needed');
+  const dueSoon=state.tasks.filter(t=>!t.done&&(isDueSoon(t.date)||isOverdue(t.date)));
+  const totalKg=state.harvests.reduce((s,h)=>s+h.weight,0);
+  document.getElementById('dash-shopping').textContent=needed.length;
+  document.getElementById('dash-tasks').textContent=dueSoon.length;
+  document.getElementById('dash-inspections').textContent=state.inspections.length;
+  document.getElementById('dash-harvest').textContent=totalKg.toFixed(1);
+  ['Hive 1','Hive 2'].forEach((hive,idx)=>{
+    const p=idx===0?'h1':'h2';
+    const last=[...state.inspections].filter(i=>i.hive===hive).sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
+    document.getElementById(`${p}-last`).textContent=last?`Last: ${fmtDate(last.date)}`:'No inspections yet';
+    document.getElementById(`${p}-queen`).textContent=last?`Queen: ${last.queenSeen}`:'–';
+    document.getElementById(`${p}-strength`).textContent=last?`Strength: ${last.strength}`:'–';
+  });
+  const urgent=needed.filter(i=>i.priority==='urgent'||i.priority==='high').slice(0,4);
+  document.getElementById('dash-urgent-list').innerHTML=urgent.length?urgent.map(i=>`<div class="list-item"><div class="list-item-body"><div class="list-item-title">${i.name}</div><div class="list-item-meta"><span class="badge badge-${i.priority}">${i.priority}</span><span class="tag">${i.category}</span></div></div></div>`).join(''):emptyState('✅','No urgent items!');
+  const upcoming=[...state.tasks].filter(t=>!t.done).sort((a,b)=>{if(!a.date)return 1;if(!b.date)return-1;return new Date(a.date)-new Date(b.date);}).slice(0,4);
+  document.getElementById('dash-task-list').innerHTML=upcoming.length?upcoming.map(t=>`<div class="list-item"><div class="list-item-body"><div class="list-item-title">${t.title}</div><div class="list-item-meta"><span class="badge badge-${isOverdue(t.date)?'overdue':t.priority}">${isOverdue(t.date)?'⚠️ Overdue':t.priority}</span>${t.date?`<span>📅 ${fmtDate(t.date)}</span>`:''}<span class="tag">🏠 ${t.hive}</span></div></div></div>`).join(''):emptyState('🎉','No upcoming tasks');
+  document.getElementById('dash-notes-list').innerHTML=state.notes.slice(0,3).length?state.notes.slice(0,3).map(n=>`<div class="note-entry"><div class="note-header"><div class="note-author">👤 ${n.author}</div><div class="note-date">${fmtDate(n.date.split('T')[0])}</div></div><div class="note-body">${n.body}</div><div class="note-hive-tag">🏠 ${n.hive}</div></div>`).join(''):emptyState('👥','No team notes yet');
+}
+
+function renderAll(){
+  renderDashboard();
+  renderInventory();
+  renderTasks();
+  renderInspections();
+  renderHarvest();
+  renderFinance();
+  renderCalendar();
+  renderNotes();
+  renderAssistant();
+}
+
+load();
+renderAll();
+</script>
+</body>
+</html>
